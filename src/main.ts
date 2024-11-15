@@ -1,11 +1,12 @@
 
 import { Router } from "./router.ts";
 import { serveDir } from "jsr:@std/http@1.0.9/file-server";
-
+import { render } from "npm:preact-render-to-string";
+import { HomePage } from "./ui.tsx";
 const router = new Router();
 
 router.get("/", (_req) => {
-	return new Response("Hello deno");
+	return new Response(render(HomePage({user:{login:"test"}})) , {status:200 , headers:{"content-type":"text/html"}});
 });
 router.get("/about", (_req) => {
 	return new Response("About page");
@@ -16,12 +17,13 @@ router.get("/users/:id", (_req, _info, params) => {
 
 router.get("/static/*", (req) => serveDir(req));
 
+
 import { getShortLink } from "./db.ts"; //! yes this is a bad practice . yes im a bad man
 // TODO add EFFECTS.ts later for better readability , you fucking moron :p 
 router.get("/links/:id", async (_req, _info, params) => {
 	const shortCode = params?.pathname.groups.id;
 	if (!shortCode) {
-		return new Response("Invalid short code", { status: 404 });
+		return new Response("Invalid short code", { status: 404  });
 	}
 	try {
 		const link = await getShortLink(shortCode);
@@ -51,15 +53,8 @@ router.post("/links/", async (req) => {
 }); 
 
 
-
-
- 
-
-
-
 export default {
 	fetch(req) {
 		return router.handler(req);
 	},
 } as Deno.ServeDefaultExport;
-

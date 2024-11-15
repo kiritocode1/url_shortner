@@ -8,5 +8,9 @@
     "@std/crypto": "jsr:@std/crypto@^1.0.3",
     "@std/encoding": "jsr:@std/encoding@^1.0.5",
     "@std/http" : "jsr:@std/http@1.0.9"
+  }, 
+  "compilerOptions": {
+    "jsx": "react-jsx", 
+    "jsxImportSource": "npm:preact"
   }
 }

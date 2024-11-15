@@ -3,6 +3,7 @@ import {  route, type Route , Handler} from "jsr:@std/http@1.0.9";
 
 export class Router { 
     #routes: Route[] = new Array<Route>();
+    
 
     get handler() { 
         return route(this.#routes, ()=>new Response("Not found", { status: 404 }));
