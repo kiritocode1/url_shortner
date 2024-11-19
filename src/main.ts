@@ -1,3 +1,5 @@
+import { createHelpers } from 'jsr:@deno/kv-oauth';
+import { createGitHubOAuthConfig } from 'jsr:@deno/kv-oauth';
 
 import { Router } from "./router.ts";
 import { serveDir } from "jsr:@std/http@1.0.9/file-server";
@@ -5,8 +7,29 @@ import { render } from "npm:preact-render-to-string";
 import { HomePage } from "./ui.tsx";
 const router = new Router();
 
+
+
+const OauthConfig = createGitHubOAuthConfig({ 
+	redirectUri: Deno.env.REDIRECT_URI??Deno.env.get("REDIRECT_URI"), 
+	
+});
+import { handleGithubCallback } from "./auth.ts";
+const { 
+	signIn, 
+	signOut
+} = createHelpers(OauthConfig)
+
+
+import { LoadEnv } from "./env.ts";
+LoadEnv();
+
+router.get("/oauth/signin",(req:Request) =>signIn(req));
+router.get("/oauth/signout", signOut);
+router.get("/oauth/callback", handleGithubCallback);
+
+
 router.get("/", (_req) => {
-	return new Response(render(HomePage({user:{login:"test"}})) , {status:200 , headers:{"content-type":"text/html"}});
+	return new Response(render(HomePage({user:router.currentUser})) , {status:200 , headers:{"content-type":"text/html"}});
 });
 router.get("/about", (_req) => {
 	return new Response("About page");
@@ -39,6 +62,7 @@ router.get("/links/:id", async (_req, _info, params) => {
 
 import { storeShortLink } from "./db.ts";
 import { createShortUrl } from "./engine.ts";
+
 router.post("/links/", async (req) => {
 
 	const { longUrl }= await req.json();

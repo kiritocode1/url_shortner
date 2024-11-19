@@ -35,6 +35,27 @@ export async function getShortLink(shortCode:StoreShortLinkParams["shortCode"]) 
     return link.value;
 }
 
+export type GithubUser = {
+
+    login: string;
+    avatar_url: string;
+    html_url: string;
+};
+
+
+export async function storeUser(sessionId: string, userId: GithubUser) { 
+    const userKey = ["sessions", sessionId];
+    const res = await kv.set(userKey, userId);
+    return res;
+};
+
+
+export async function getUser(sessionId: string) { 
+    const userKey = ["sessions", sessionId];
+    const user = await kv.get<GithubUser>(userKey);
+    return user.value;
+}
+
 
 
 // import { createShortUrl } from "./engine.ts";
