@@ -8,7 +8,7 @@ const { handleCallback, getSessionId } = createHelpers(oauthConfig);
 
 export async function getCurrentUser(req: Request) {
   const sessionId = await getSessionId(req);
-  console.log(sessionId);
+  console.log("sessionId", sessionId);
   return sessionId ? await getUser(sessionId) : null;
 }
 
@@ -27,9 +27,11 @@ export async function getGithubProfile(accessToken: string) {
   return res.json() as Promise<GithubUser>;
 }
 
-
+// ! this is where im getting the error 
 export async function handleGithubCallback(req: Request) {
-    const { response, tokens, sessionId } = await handleCallback(req);
+
+  const { response, tokens, sessionId } = await handleCallback(req);
+
     const UserData = await getGithubProfile(tokens?.accessToken);
     const filteredUserData = pick(UserData, ["login", "avatar_url", "html_url"]);
     await storeUser(sessionId, filteredUserData);

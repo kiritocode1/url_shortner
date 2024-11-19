@@ -56,7 +56,7 @@ export function HomePage({ user }: { user: GithubUser | null }) {
           <div className="hero-content text-center">
             <div className="max-w-md">
               <h1 className="text-5xl font-bold">
-                Hello there {user??"Anonymous"}
+                Hello there {user?.login??"Anonymous"}
               </h1>
               <p className="py-6">
                 Deno is cool and I made this URL shortener using the Primitives

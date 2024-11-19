@@ -1,10 +1,17 @@
 import { createHelpers } from 'jsr:@deno/kv-oauth';
 import { createGitHubOAuthConfig } from 'jsr:@deno/kv-oauth';
-
 import { Router } from "./router.ts";
 import { serveDir } from "jsr:@std/http@1.0.9/file-server";
 import { render } from "npm:preact-render-to-string";
 import { HomePage } from "./ui.tsx";
+import { LoadEnv } from "./env.ts";
+import { storeShortLink } from "./db.ts";
+import { createShortUrl } from "./engine.ts";
+import { handleGithubCallback } from "./auth.ts";
+LoadEnv();
+
+
+
 const router = new Router();
 
 
@@ -13,15 +20,13 @@ const OauthConfig = createGitHubOAuthConfig({
 	redirectUri: Deno.env.REDIRECT_URI??Deno.env.get("REDIRECT_URI"), 
 	
 });
-import { handleGithubCallback } from "./auth.ts";
+
 const { 
 	signIn, 
 	signOut
 } = createHelpers(OauthConfig)
 
 
-import { LoadEnv } from "./env.ts";
-LoadEnv();
 
 router.get("/oauth/signin",(req:Request) =>signIn(req));
 router.get("/oauth/signout", signOut);
@@ -59,9 +64,6 @@ router.get("/links/:id", async (_req, _info, params) => {
 		return new Response("Internal server error", { status: 500  });
 	}
 });
-
-import { storeShortLink } from "./db.ts";
-import { createShortUrl } from "./engine.ts";
 
 router.post("/links/", async (req) => {
 

@@ -22,7 +22,7 @@ export function LoadEnv() {
     );
   }
   const env = {
-    PORT: Deno.env.get("PORT"),
+    PORT: Number(Deno.env.get("PORT")),
     REDIRECT_URI: Deno.env.get("REDIRECT_URI"),
     GITHUB_CLIENT_ID: Deno.env.get("GITHUB_CLIENT_ID"),
     GITHUB_CLIENT_SECRET: Deno.env.get("GITHUB_CLIENT_SECRET"),

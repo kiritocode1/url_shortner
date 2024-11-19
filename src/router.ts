@@ -9,7 +9,7 @@ export class Router {
   get handler() {
     return route(
       this.#routes,
-      () => new Response("Not found", { status: 404 })
+      () => new Response(" Path : Not found", { status: 404 })
     );
   }
 
@@ -20,10 +20,11 @@ export class Router {
       handler: async (req, info, params) => {
           try {
             this.currentUser = await getCurrentUser(req);
+            console.dir( this.currentUser , { depth: Infinity , colors:true } );
           return (await handler(req, info!, params!)) as Response;
         } catch (e) {
           console.error(e);
-          return new Response("Internal server error", { status: 500 });
+          return new Response("Internal server error : Route.ts", { status: 500 });
         }
       },
     });
