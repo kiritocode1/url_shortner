@@ -1,6 +1,6 @@
 {
   "tasks": {
-    "dev": "deno serve   --watch  --env-file=.env  --allow-env --unstable-kv  src/main.ts ",
+    "dev": "deno serve  --allow-net --allow-read --watch  --env-file=.env  --allow-env --unstable-kv  src/main.ts ",
     "test": "deno test -A --unstable-kv --env  tests/"
   },
   "imports": {

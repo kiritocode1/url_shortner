@@ -3,7 +3,8 @@
 import type { ComponentChildren, ComponentProps } from "npm:preact";
 import type { GithubUser } from "./db.ts";
 
-export function Layout({ children }: { children: ComponentChildren }) { 
+//! prop drillin for the win : D 
+export function Layout({ children  , user}: { children: ComponentChildren , user:GithubUser|null }) { 
 
     return (
       <html data-theme="light">
@@ -23,7 +24,7 @@ export function Layout({ children }: { children: ComponentChildren }) {
         </head>
         <div className="">
           <header>
-            <Navbar/>
+            <Navbar user={user}/>
           </header>
           <main className="">{children}</main>
         </div>
@@ -51,24 +52,32 @@ export function HomePage({ user }: { user: GithubUser | null }) {
   
 
     return (
-      <Layout>
+      <Layout user={user}>
         <div className="hero bg-base-200 min-h-screen">
           <div className="hero-content text-center">
             <div className="max-w-md">
               <h1 className="text-5xl font-bold">
-                Hello there {user?.login??"Anonymous"}
+                Hello there {user?.login ?? "Anonymous"}
               </h1>
               <p className="py-6">
                 Deno is cool and I made this URL shortener using the Primitives
                 deno gave me 😛
               </p>
-              <a href="http://localhost:8000/oauth/signin/">
-                <button className="btn btn-primary">
-                  {" "}
-                  <Github />
-                  Sign In with Github
-                </button>
-              </a>
+              {user ? (
+                <a
+                  href="http://localhost:8000/oauth/signout"
+                  className={"btn btn-outline btn-error"}
+                >
+                  Sign Out
+                </a>
+              ) : (
+                <a href="http://localhost:8000/oauth/signin/">
+                  <button className="btn btn-primary">
+                    <Github />
+                    Sign In with Github
+                  </button>
+                </a>
+              )}
             </div>
           </div>
         </div>
@@ -77,7 +86,7 @@ export function HomePage({ user }: { user: GithubUser | null }) {
 }
 
 
-const Navbar = () => { 
+const Navbar = ({user}: { user : GithubUser|null}) => { 
   return (
     <div className="navbar bg-base-100">
       <div className="navbar-start">
@@ -118,7 +127,7 @@ const Navbar = () => {
         <a className="btn btn-ghost text-xl">Url Shortener</a>
       </div>
       <div className="navbar-end">
-        
+        <img src={user?.avatar_url??"/static/default_image.png"} alt="avatar" className="rounded-full w-10 h-10"/>
       </div>
     </div>
   );

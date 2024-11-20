@@ -5,9 +5,10 @@ import { serveDir } from "jsr:@std/http@1.0.9/file-server";
 import { render } from "npm:preact-render-to-string";
 import { HomePage } from "./ui.tsx";
 import { LoadEnv } from "./env.ts";
-import { storeShortLink } from "./db.ts";
+import { storeShortLink, storeUser } from "./db.ts";
 import { createShortUrl } from "./engine.ts";
-import { handleGithubCallback } from "./auth.ts";
+// import { handleGithubCallback } from "./auth.ts";
+
 LoadEnv();
 
 
@@ -21,16 +22,22 @@ const OauthConfig = createGitHubOAuthConfig({
 	
 });
 
+
 const { 
 	signIn, 
-	signOut
+	signOut, 
+	handleCallback
 } = createHelpers(OauthConfig)
 
+async function handleGithubCallback(req: Request) {
+  const { response, tokens, sessionId } = await handleCallback(req);
 
+  const UserData = await getGithubProfile(tokens?.accessToken);
+  const filteredUserData = pick(UserData, ["login", "avatar_url", "html_url"]);
+  await storeUser(sessionId, filteredUserData);
+  return response;
+}
 
-router.get("/oauth/signin",(req:Request) =>signIn(req));
-router.get("/oauth/signout", signOut);
-router.get("/oauth/callback", handleGithubCallback);
 
 
 router.get("/", (_req) => {
@@ -45,8 +52,19 @@ router.get("/users/:id", (_req, _info, params) => {
 
 router.get("/static/*", (req) => serveDir(req));
 
+router.get("/oauth/signin/", async (req: Request) => {
+	return await signIn(req);
+//   return new Response("await signIn(req)");
+});
+router.get("/oauth/signout", signOut);
+router.get("/oauth/callback", handleGithubCallback);
 
 import { getShortLink } from "./db.ts"; //! yes this is a bad practice . yes im a bad man
+import { getGithubProfile } from "./auth.ts";
+import { pick } from "jsr:@std/collections/pick";
+
+
+
 // TODO add EFFECTS.ts later for better readability , you fucking moron :p 
 router.get("/links/:id", async (_req, _info, params) => {
 	const shortCode = params?.pathname.groups.id;
@@ -66,7 +84,6 @@ router.get("/links/:id", async (_req, _info, params) => {
 });
 
 router.post("/links/", async (req) => {
-
 	const { longUrl }= await req.json();
   const shortCode = await createShortUrl(longUrl);
 	const res = await storeShortLink({ longUrl, shortCode, userId: "test User" });
