@@ -38,7 +38,7 @@ const Github = (props: ComponentProps<"svg">) => (
     viewBox="0 0 256 250"
     width="1em"
     height="1em"
-    fill="#fff"
+    fill="#000"
     xmlns="http://www.w3.org/2000/svg"
     preserveAspectRatio="xMidYMid"
     {...props}
@@ -66,7 +66,7 @@ export function HomePage({ user }: { user: GithubUser | null }) {
               </p>
               {user ? (
                 <div className="flex justify-center gap-4">
-                  <a href="/links/new" className="btn   btn-primary">
+                  <a href="/link/new" className="btn   ">
                     Create New Link
                   </a>
                   <a
@@ -78,7 +78,7 @@ export function HomePage({ user }: { user: GithubUser | null }) {
                 </div>
               ) : (
                 <a href="/oauth/signin/">
-                  <button className="btn btn-primary">
+                  <button className="btn ">
                     <Github />
                     Sign In with Github
                   </button>
@@ -182,7 +182,57 @@ export function AboutPage({user}: { user:GithubUser|null}) {
             Github.
           </a>
         </p>
+        <p className={"text-xl"}>a lot of assets are made by me or collected from cosmos.so  and edited using figma,</p>
+        <p className={"text-xl"}>please credit me if them use this assets.</p>
       </div>
     </Layout>
   );
 }
+
+
+export function UnauthorizedPage({user}: { user:GithubUser|null}) { 
+  return (
+    <Layout user={user}>
+      <div className="flex flex-col items-center justify-center gap-4">
+        <img src="/static/key.png" alt="key"  className={"size-60"}/>
+
+        <h1 className="text-5xl font-bold">Unauthorized</h1>
+        <p className="text-xl">
+          You are not authorized to access this page.
+        </p>
+        <p className="text-xl">
+          Please sign in to access this page.
+        </p>
+      </div>
+    </Layout>
+  );
+}; 
+
+
+export function CreateShortLinkPage({ user }: { user: GithubUser | null }) {
+  return (
+    <Layout user={user}>
+      <div className="flex flex-col items-center justify-center h-screen w-full">
+        <h1>Create a Short link here</h1>
+        <form className="flex flex-col items-center justify-center w-full" action={"/links"} method={"POST"}>
+        
+        </form>
+      </div>
+    </Layout>); 
+  
+};
+
+
+export function ErrorPage({user}: { user:GithubUser|null}) { 
+  return (
+    <Layout user={user}>
+      <div className="flex flex-col items-center justify-center gap-4">
+        <img src="/static/lost.png" alt="key"  className={"size-60"}/>
+        <h1 className="text-5xl font-bold">Error</h1>
+        <p className="text-xl">
+          Something went wrong. Please try again.
+        </p>
+      </div>
+    </Layout>
+  );
+};

@@ -93,11 +93,11 @@ Deno.test("POST SHORT URL", async (t) => {
 });
  
 
-Deno.test("Auth Test", async (t) => { 
+Deno.test("Auth Test", async (_t) => { 
 
 });
 
 
-Deno.test("logging test", async (t) => {
+Deno.test("logging test", async (_t) => {
     
  }); 

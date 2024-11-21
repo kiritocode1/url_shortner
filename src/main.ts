@@ -3,11 +3,17 @@ import { createGitHubOAuthConfig } from 'jsr:@deno/kv-oauth';
 import { Router } from "./router.ts";
 import { serveDir } from "jsr:@std/http@1.0.9/file-server";
 import { render } from "npm:preact-render-to-string";
-import { AboutPage, HomePage } from "./ui.tsx";
+import { AboutPage, CreateShortLinkPage, ErrorPage, HomePage, UnauthorizedPage } from "./ui.tsx";
 import { LoadEnv } from "./env.ts";
 import { storeShortLink, storeUser } from "./db.ts";
 import { createShortUrl } from "./engine.ts";
 // import { handleGithubCallback } from "./auth.ts";
+
+import { getShortLink } from "./db.ts"; //? yes this is a bad practice . yes im a bad man
+import { getGithubProfile } from "./auth.ts";
+import { pick } from "jsr:@std/collections/pick";
+
+
 
 LoadEnv();
 
@@ -60,11 +66,17 @@ router.get("/oauth/signin/", async (req: Request) => {
 router.get("/oauth/signout", signOut);
 router.get("/oauth/callback", handleGithubCallback);
 
-import { getShortLink } from "./db.ts"; //! yes this is a bad practice . yes im a bad man
-import { getGithubProfile } from "./auth.ts";
-import { pick } from "jsr:@std/collections/pick";
+//~ just to make things simpler to send this response
+const unAuthorizedResponse = new Response(
+  render(UnauthorizedPage({ user: router.currentUser })),
+  { status: 401, headers: { "content-type": "text/html" } }
+);
 
-
+//~ to make error Res simpler to handle 
+const ErrorResponse = new Response(
+	render(ErrorPage({ user: router.currentUser })),
+	{ status: 500, headers: { "content-type": "text/html" } }
+);
 
 // TODO add EFFECTS.ts later for better readability , you fucking moron :p 
 router.get("/links/:id", async (_req, _info, params) => {
@@ -75,7 +87,7 @@ router.get("/links/:id", async (_req, _info, params) => {
 	try {
 		const link = await getShortLink(shortCode);
 		if (!link) {
-			return new Response("Short link not found", { status: 404 });
+			return ErrorResponse;
 		}
 		return new Response(JSON.stringify(link), { status: 201  , headers: { "content-type": "application/json" }  as HeadersInit });
 	} catch (e) {
@@ -85,7 +97,13 @@ router.get("/links/:id", async (_req, _info, params) => {
 });
 
 router.post("/links/", async (req) => {
-	const { longUrl }= await req.json();
+	if (!router.currentUser) return unAuthorizedResponse;
+
+	const data = await req.formData();
+	const longUrl = data.get("longUrl") as string;
+	if (!longUrl) {
+		return new Response("MISSING long url or possibly LongUrl is of a different type", { status: 400 });
+	}
   const shortCode = await createShortUrl(longUrl);
 	const res = await storeShortLink({ longUrl, shortCode, userId: "test User" });
 	if (!res.ok) {
@@ -96,12 +114,20 @@ router.post("/links/", async (req) => {
   });
 }); 
 
-router.get("/links/new/", async (_req) => {
 
-	return new Response("you get a new link , and you get a new link , and you get a new link");
+
+
+
+router.get("/link/new",  (_req) => {
+	
+	if (!router.currentUser) return unAuthorizedResponse;
+
+	return new Response(render(CreateShortLinkPage({user:router.currentUser})) , {status:200 , headers:{"content-type":"text/html"}});
 });
 
-
+router.get("/ERROR", (_req) => {
+	return ErrorResponse;
+});	
 
 export default {
 	fetch(req) {
