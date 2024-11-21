@@ -1,4 +1,5 @@
-const kv = await  Deno.openKv();
+const kv = await Deno.openKv(); 
+
 
 export type ShortLink = {
 	shortCode: string;
@@ -18,7 +19,7 @@ export async function storeShortLink({ longUrl, shortCode, userId }: StoreShortL
         longUrl, 
         createdAt: Date.now(), 
         userId, 
-        clickCount: 0 
+        clickCount: 0  
     };
     const res = await kv.set(shortLinkKey, data);
 

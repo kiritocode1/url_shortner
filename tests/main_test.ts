@@ -90,4 +90,14 @@ Deno.test("POST SHORT URL", async (t) => {
 		 assertEquals(res.status, 200);
 		 //~ equal later ... there is some problem
 	 });
- });
+});
+ 
+
+Deno.test("Auth Test", async (t) => { 
+
+});
+
+
+Deno.test("logging test", async (t) => {
+    
+ }); 

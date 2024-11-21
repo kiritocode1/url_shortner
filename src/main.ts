@@ -1,9 +1,9 @@
-import { createHelpers } from 'jsr:@deno/kv-oauth';
+import { createHelpers } from 'jsr:@deno/kv-oauth';//? [...auth] 
 import { createGitHubOAuthConfig } from 'jsr:@deno/kv-oauth';
 import { Router } from "./router.ts";
 import { serveDir } from "jsr:@std/http@1.0.9/file-server";
 import { render } from "npm:preact-render-to-string";
-import { HomePage } from "./ui.tsx";
+import { AboutPage, HomePage } from "./ui.tsx";
 import { LoadEnv } from "./env.ts";
 import { storeShortLink, storeUser } from "./db.ts";
 import { createShortUrl } from "./engine.ts";
@@ -29,6 +29,7 @@ const {
 	handleCallback
 } = createHelpers(OauthConfig)
 
+
 async function handleGithubCallback(req: Request) {
   const { response, tokens, sessionId } = await handleCallback(req);
 
@@ -44,7 +45,7 @@ router.get("/", (_req) => {
 	return new Response(render(HomePage({user:router.currentUser})) , {status:200 , headers:{"content-type":"text/html"}});
 });
 router.get("/about", (_req) => {
-	return new Response("About page");
+	return new Response(render(AboutPage({user:router.currentUser})) , {status:200 , headers:{"content-type":"text/html"}});
 });
 router.get("/users/:id", (_req, _info, params) => {
 	return new Response(params?.pathname.groups.id);
@@ -94,6 +95,12 @@ router.post("/links/", async (req) => {
     status: 201,
   });
 }); 
+
+router.get("/links/new/", async (_req) => {
+
+	return new Response("you get a new link , and you get a new link , and you get a new link");
+});
+
 
 
 export default {
