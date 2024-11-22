@@ -3,9 +3,9 @@ import { createGitHubOAuthConfig } from 'jsr:@deno/kv-oauth';
 import { Router } from "./router.ts";
 import { serveDir } from "jsr:@std/http@1.0.9/file-server";
 import { render } from "npm:preact-render-to-string";
-import { AboutPage, CreateShortLinkPage, ErrorPage, HomePage, UnauthorizedPage } from "./ui.tsx";
+import { AboutPage, CreateShortLinkPage, ErrorPage, HomePage, LinksPage, UnauthorizedPage } from "./ui.tsx";
 import { LoadEnv } from "./env.ts";
-import { storeShortLink, storeUser } from "./db.ts";
+import { getUserLinks, storeShortLink, storeUser } from "./db.ts";
 import { createShortUrl } from "./engine.ts";
 // import { handleGithubCallback } from "./auth.ts";
 
@@ -66,17 +66,8 @@ router.get("/oauth/signin/", async (req: Request) => {
 router.get("/oauth/signout", signOut);
 router.get("/oauth/callback", handleGithubCallback);
 
-//~ just to make things simpler to send this response
-const unAuthorizedResponse = new Response(
-  render(UnauthorizedPage({ user: router.currentUser })),
-  { status: 401, headers: { "content-type": "text/html" } }
-);
 
-//~ to make error Res simpler to handle 
-const ErrorResponse = new Response(
-	render(ErrorPage({ user: router.currentUser })),
-	{ status: 500, headers: { "content-type": "text/html" } }
-);
+
 
 // TODO add EFFECTS.ts later for better readability , you fucking moron :p 
 router.get("/links/:id", async (_req, _info, params) => {
@@ -87,7 +78,11 @@ router.get("/links/:id", async (_req, _info, params) => {
 	try {
 		const link = await getShortLink(shortCode);
 		if (!link) {
-			return ErrorResponse;
+			return new Response(render(ErrorPage({ user: router.currentUser })), {
+        status: 500,
+        headers: { "content-type": "text/html" },
+      });
+;
 		}
 		return new Response(JSON.stringify(link), { status: 201  , headers: { "content-type": "application/json" }  as HeadersInit });
 	} catch (e) {
@@ -97,20 +92,28 @@ router.get("/links/:id", async (_req, _info, params) => {
 });
 
 router.post("/links/", async (req) => {
-	if (!router.currentUser) return unAuthorizedResponse;
+	if (!router.currentUser) return new Response(render(UnauthorizedPage({ user: router.currentUser })), {
+    status: 401,
+    headers: { "content-type": "text/html" },
+  });;
 
 	const data = await req.formData();
-	const longUrl = data.get("longUrl") as string;
+	const longUrl = (data.get("longURL")??data.get("longUrl")) as string;
 	if (!longUrl) {
-		return new Response("MISSING long url or possibly LongUrl is of a different type", { status: 400 });
+		return new Response("MISSING long url or possibly LongUrl is of a different type" + longUrl, { status: 400 });
 	}
-  const shortCode = await createShortUrl(longUrl);
-	const res = await storeShortLink({ longUrl, shortCode, userId: "test User" });
+	console.log("longUrl", longUrl);
+	const shortCode = await createShortUrl(longUrl);
+	console.log("shortCode", shortCode);
+	const res = await storeShortLink({ longUrl, shortCode, userId: router.currentUser.login });
 	if (!res.ok) {
 		return new Response("Internal server error , unable to store short link", { status: 500 });
 	}
-  return new Response(shortCode, {
-    status: 201,
+  return new Response(null, {
+	  status: 303,
+	  headers: { 
+		  "Location" :"/links/"
+	  }
   });
 }); 
 
@@ -120,14 +123,37 @@ router.post("/links/", async (req) => {
 
 router.get("/link/new",  (_req) => {
 	
-	if (!router.currentUser) return unAuthorizedResponse;
+	if (!router.currentUser) return new Response(render(UnauthorizedPage({ user: router.currentUser })), {
+    status: 401,
+    headers: { "content-type": "text/html" },
+  });
 
 	return new Response(render(CreateShortLinkPage({user:router.currentUser})) , {status:200 , headers:{"content-type":"text/html"}});
 });
 
 router.get("/ERROR", (_req) => {
-	return ErrorResponse;
+	return new Response(render(ErrorPage({ user: router.currentUser })), {
+    status: 500,
+    headers: { "content-type": "text/html" },
+  });
+;
 });	
+
+router.get("/links/", async (_req) => {
+	if (!router.currentUser) return new Response(render(UnauthorizedPage({ user: router.currentUser })), {
+    status: 401,
+    headers: { "content-type": "text/html" },
+	});
+	
+	const shortLinks = await getUserLinks(router.currentUser.login);
+	
+	return new Response(render(LinksPage({ shortLinks , user: router.currentUser })), {
+		status: 200,
+		headers: { "content-type": "text/html" },
+  });
+ });
+
+
 
 export default {
 	fetch(req) {

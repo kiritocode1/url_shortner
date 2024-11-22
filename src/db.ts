@@ -13,19 +13,33 @@ export type ShortLink = {
 type StoreShortLinkParams = Pick<ShortLink, "longUrl" | "shortCode" | "userId">;
 
 export async function storeShortLink({ longUrl, shortCode, userId }: StoreShortLinkParams) {
-    const shortLinkKey = ["shortLinks", shortCode]; 
-    const data: ShortLink = { 
-        shortCode, 
-        longUrl, 
-        createdAt: Date.now(), 
-        userId, 
-        clickCount: 0  
+    const shortLinkKey = ["shortLinks", shortCode];
+    const userIndex = [userId, shortCode];
+    const data: ShortLink = {
+        shortCode,
+        longUrl,
+        createdAt: Date.now(),
+        userId,
+        clickCount: 0
     };
-    const res = await kv.set(shortLinkKey, data);
+    
 
+  
+  const res = await kv
+    .atomic()
+    .set(shortLinkKey, data)
+    .set(userIndex, shortCode)
+    .commit();
+
+ 
     if (!res.ok) {
         throw new Error("Failed to store short link");
     }
+    Deno.inspect({ value: "FILE DB.TS : Stored short link", res }, {
+        colors: true,
+        depth: Infinity,
+        trailingComma: true,
+    });
     return res;
 }
 
@@ -57,18 +71,42 @@ export async function getUser(sessionId: string) {
     return user.value;
 }
 
+export async function getAllLinks() { 
+    const links = await kv.list<ShortLink>({ prefix: ["shortLinks"] });
+    const res =await  Array.fromAsync(links);
+    const longLinks = (await res).map((link)=> link.value)
+    return longLinks;
+}
 
 
-// import { createShortUrl } from "./engine.ts";
 
-// const link = "https://aryank.online/";
-// const shortCode = await createShortUrl(link);
+export async function getUserLinks(userId: string) {
+  const list = kv.list<string>({ prefix: [userId] });
+    const res = await Array.fromAsync(list);
+    console.dir(res, { depth: Infinity, colors: true });
+    const userShortLinkKeys = res.map((v) => ["shortlinks", v.key[1]]);
+  console.log("userShortLinkKeys", userShortLinkKeys);
+  
+    const userRes = await kv.getMany<ShortLink[]>(userShortLinkKeys.slice(0, 5));//! 10 
+  const userShortLinks = await Array.fromAsync(userRes);
+  console.dir( {userShortLinks} , { depth: Infinity, colors: true });
+  return userShortLinks.map((v) => v.key[1]);
+}
 
-// console.log(shortCode);
-// const userId = "aryan k";
+async function _DeleteAllLinks() {
+  const links = await kv.list<ShortLink>({ prefix: ["shortLinks"] });
+  const res = await Array.fromAsync(links);
+  const longLinks = (await res).map((link) => link.value);
+  for (const link of longLinks) {
+    await kv.delete([link.shortCode]);
+  }
+}
 
-// await storeShortLink({ longUrl: link, shortCode, userId });
-
-// const link2 = await getShortLink(shortCode);
-
-// console.log(link2);
+async function _DeleteAllUsers() {
+  const users = await kv.list<GithubUser>({ prefix: ["sessions"] });
+  const res = await Array.fromAsync(users);
+  const userIds = (await res).map((user) => user.key[0]);
+  for (const userId of userIds) {
+    await kv.delete([userId]);
+  }
+}

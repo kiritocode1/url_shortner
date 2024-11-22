@@ -1,7 +1,7 @@
 /** @jsxImportSource https://esm.sh/preact */
 
 import type { ComponentChildren, ComponentProps } from "npm:preact";
-import type { GithubUser } from "./db.ts";
+import type { GithubUser, ShortLink } from "./db.ts";
 
 //! prop drillin for the win : D 
 export function Layout({ children  , user}: { children: ComponentChildren , user:GithubUser|null }) { 
@@ -213,12 +213,38 @@ export function CreateShortLinkPage({ user }: { user: GithubUser | null }) {
   return (
     <Layout user={user}>
       <div className="flex flex-col items-center justify-center h-screen w-full">
-        <h1>Create a Short link here</h1>
-        <form className="flex flex-col items-center justify-center w-full" action={"/links"} method={"POST"}>
         
+        <form
+          className="w-full max-w-md mx-auto p-6 space-y-4 bg-white shadow-md rounded-lg"
+          action="/links/"
+          method="POST"
+        >
+          <div className="space-y-2">
+            <label
+              htmlFor="longURL"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Enter your long URL:
+            </label>
+            <input
+              type="url"
+              id="longURL"
+              name="longURL"
+              placeholder="https://example.com/very-long-url"
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <button
+            type="submit"
+            className="w-full px-4 py-2 btn  rounded-md  "
+          >
+            Shorten URL
+          </button>
         </form>
       </div>
-    </Layout>); 
+    </Layout>
+  ); 
   
 };
 
@@ -228,7 +254,7 @@ export function ErrorPage({user}: { user:GithubUser|null}) {
     <Layout user={user}>
       <div className="flex flex-col items-center justify-center gap-4">
         <img src="/static/lost.png" alt="key"  className={"size-60"}/>
-        <h1 className="text-5xl font-bold">Error</h1>
+        <h1 className="text-5xl font-bold">418: I'm a teapot.</h1>
         <p className="text-xl">
           Something went wrong. Please try again.
         </p>
@@ -236,3 +262,27 @@ export function ErrorPage({user}: { user:GithubUser|null}) {
     </Layout>
   );
 };
+
+export const LinksPage = ({ shortLinks , user }: { shortLinks: (ShortLink|null)[] , user: GithubUser|null }) => {
+  return (
+    <Layout user={user}>
+      { 
+        shortLinks===null ? 
+        <div className="flex flex-col items-center justify-center">
+          <img src="/static/lost.png" alt="key"  className={"size-60"}/>
+          <h1 className="text-5xl font-bold">No links yet</h1>
+          <p className="text-xl">
+            You have no links yet. Create one now.
+          </p>
+        </div>
+        :
+        <div className="flex flex-col items-center justify-center">
+          <h1 className="text-5xl font-bold">Your links</h1>
+          <ul className="list-disc list-inside">
+            {JSON.stringify(shortLinks)}
+          </ul>
+        </div>
+      }
+    </Layout>
+  )
+ };

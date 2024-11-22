@@ -8,7 +8,7 @@ const { handleCallback, getSessionId } = createHelpers(oauthConfig);
 
 export async function getCurrentUser(req: Request) {
   const sessionId = await getSessionId(req);
-  console.log("sessionId auth.ts:11:13", sessionId);
+  // console.log("sessionId auth.ts:11:13", sessionId);
   return sessionId ? await getUser(sessionId) : null;
 }
 

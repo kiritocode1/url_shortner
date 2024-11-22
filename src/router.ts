@@ -26,7 +26,7 @@ export class Router {
       handler: async (req, info, params) => {
         try {
           this.currentUser = await getCurrentUser(req);
-          console.dir(this.currentUser, { depth: Infinity, colors: true });
+          // console.dir(this.currentUser, { depth: Infinity, colors: true });
           return (await handler(req, info!, params!)) as Response;
         } catch (e) {
           console.error(e);
