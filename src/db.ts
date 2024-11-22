@@ -84,13 +84,14 @@ export async function getUserLinks(userId: string) {
   const list = kv.list<string>({ prefix: [userId] });
     const res = await Array.fromAsync(list);
     console.dir(res, { depth: Infinity, colors: true });
-    const userShortLinkKeys = res.map((v) => ["shortlinks", v.key[1]]);
+    const userShortLinkKeys = res.map((v) => ["shortLinks", v.key[1]]);
   console.log("userShortLinkKeys", userShortLinkKeys);
-  
-    const userRes = await kv.getMany<ShortLink[]>(userShortLinkKeys.slice(0, 5));//! 10 
+  const Top10Keys = userShortLinkKeys.slice(0, 10);
+  console.log("Top10Keys", Top10Keys);
+    const userRes = await kv.getMany<ShortLink[]>(Top10Keys);//! 10 
   const userShortLinks = await Array.fromAsync(userRes);
   console.dir( {userShortLinks} , { depth: Infinity, colors: true });
-  return userShortLinks.map((v) => v.key[1]);
+  return userShortLinks;
 }
 
 async function _DeleteAllLinks() {
